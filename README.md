@@ -12,11 +12,39 @@ This repo measures that, and measures the fix in
 [config-tv#40](https://github.com/react-native-tvos/config-tv/pull/40), which adds
 `iconSmallLayers`, `iconSmall2xLayers` and `iconLayers`.
 
-Everything runs locally: **no Apple account, no signing, no EAS, no simulator.** The plugin only
-runs during `expo prebuild`, so prebuild plus `actool` and `assetutil` is the whole story.
+Everything runs locally: **no Apple account, no signing, no EAS.** The plugin only runs during
+`expo prebuild`, so prebuild plus `actool` and `assetutil` is the whole proof. A simulator is
+optional and only there to look at the result.
 
-There is no parallax screenshot here on purpose. The effect only shows while focus moves on a real
-device, so distinct layer renditions in the compiled catalog are the honest proof.
+## See it
+
+`npm run show` builds both icon modes for the Apple TV simulator and installs them side by side.
+Both apps below were built with PR #40. On 0.1.6 the left icon looks exactly like the right one,
+because the layer keys are ignored.
+
+![the two icons side by side](docs/tv-0-icons-closeup.png)
+
+Left, the layered icon: the teal `BACK` fills the tile, the purple `MIDDLE` band sits over it and
+the orange `FRONT` box sits on top. Right, the flat icon: one crimson `FLAT` image. That is a crop
+of the home screen:
+
+![tvOS home screen with both icons](docs/tv-1-both-icons.png)
+
+Focus the layered icon and tvOS lifts the front layer away from the back, with a shadow between
+them. The top shelf image renders too, so the rest of the brand assets work:
+
+![the layered icon focused](docs/tv-2-layered-focused.png)
+
+Focus the flat icon and it only scales. Every layer holds the same picture, so there is nothing to
+separate:
+
+![the flat icon focused](docs/tv-3-flat-focused.png)
+
+The full parallax tilt needs a real remote's touch surface, which no simulator screenshot can
+show. The compiled digests in check 2 are the machine-checkable proof; these pictures are the
+human-readable one.
+
+Screenshots taken on a clean Apple TV 4K simulator running tvOS 26.5, with nothing else installed.
 
 ## Run it
 
@@ -46,6 +74,18 @@ script prints tells you nothing about which code is installed. The checks do.
 `./repro.sh` exits 0 when every check passes and 1 when one fails. The first run takes a few
 minutes for `npm install`; later runs take under 20 seconds.
 
+To look at the icons rather than measure them, run the repro first and then:
+
+```bash
+npm run show        # builds both modes for the Apple TV simulator and installs them
+open -a Simulator
+```
+
+`npm run show` reuses whatever config-tv `./repro.sh` installed, so the icons you see come from
+the same plugin build the checks ran against. It needs a tvOS simulator runtime and CocoaPods, and
+the first build is slow: a `pod install` plus a full Release build of `react-native-tvos`. The two
+modes share one Xcode project and one derived-data directory, so the second build is incremental.
+
 ## What it does
 
 `expo prebuild --platform ios` runs twice from the same `app.config.js`, switched by `ICON_MODE`:
@@ -54,6 +94,9 @@ minutes for `npm install`; later runs take under 20 seconds.
 | --- | --- | --- |
 | `layers` | `iconLayers`, `iconSmallLayers`, `iconSmall2xLayers`, **and** the flat keys | checks 1 and 2 |
 | `flat` | only `icon`, `iconSmall`, `iconSmall2x` | check 3 |
+
+The two modes also get their own bundle id and display name, `Layered Icon` and `Flat Icon`, so
+`npm run show` can put both on one home screen. Nothing else about them differs.
 
 The `layers` mode passes both kinds of key on purpose. 0.1.6 requires all three flat keys and
 ignores the layer keys, so this is the one config that produces a measurable result on both
@@ -261,7 +304,9 @@ The sizes are exact, since `actool` fails on anything else. Note that 0.1.6's do
 | `tools/checks.mjs` | derives the three checks, shared by the report and the tests |
 | `tools/report.mjs` | prints the table and the check lines, exits non-zero on failure |
 | `tools/make-art.mjs` | regenerates the placeholder PNGs |
+| `tools/show.mjs` | builds both modes for the Apple TV simulator and installs them |
 | `tests/icon-layers.test.mjs` | `node:test` assertions over `out/result.json` |
+| `docs/` | the simulator screenshots above, resized to 1920x1080 |
 
 Verified with `@react-native-tvos/config-tv@0.1.6`, `expo@56.0.20`,
 `react-native-tvos@0.85.3-3`, Xcode 26.6 (`actool` 24765), the tvOS 26.5 SDK and Node 24.12.0 on
