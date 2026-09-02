@@ -3,8 +3,8 @@
 //   ./repro.sh --config-tv-version file:../config-tv/packages/config-tv
 //   npm test
 //
-// All three green = an Apple TV app icon can have per-layer artwork, and a config that only
-// uses the flat keys is untouched.
+// All four green = an Apple TV app icon can have per-layer artwork, a config that only uses the
+// flat keys is untouched, and the plugin under test is really the one you think it is.
 import assert from "node:assert/strict";
 import {describe, it} from "node:test";
 
@@ -17,6 +17,7 @@ import {
     isComplete,
     layerArtwork,
     layerRenditions,
+    layerSupportMatchesOutcome,
     loadResult,
     missingPlistKeys,
     REQUIRED_PLIST_KEYS,
@@ -38,9 +39,25 @@ function assertEveryLayerPresent(rows, what) {
     }
 }
 
-console.log(`config-tv under test: ${result.configTvSpec} (version ${result.configTvVersion})\n`);
+console.log(
+    `config-tv under test: ${result.configTvSpec} (version ${result.configTvVersion}, ` +
+        `layer support ${result.pluginHasLayerSupport ? "present" : "absent"})\n`
+);
 
 describe("Apple TV app icon layers", () => {
+    it("0. the installed plugin matches the outcome", () => {
+        assert.ok(
+            layerSupportMatchesOutcome(result),
+            `The installed build ${result.pluginHasLayerSupport ? "has" : "has no"} per-layer ` +
+                `support, but the compiled layers ` +
+                `${result.pluginHasLayerSupport ? "were repeated" : "came out distinct"}. ` +
+                `Spec under test was ${result.configTvSpec}. A file: spec keeps the version of ` +
+                `the release it branched from, and build/ is gitignored output from whichever ` +
+                `branch was compiled last, so check that the source checkout is built and that ` +
+                `the install did not fall back to --ignore-scripts.`
+        );
+    });
+
     it("1. each layer of each app icon gets its own artwork", () => {
         const rows = layerArtwork(result, "layers");
         assertEveryLayerPresent(rows, "generated image stacks");

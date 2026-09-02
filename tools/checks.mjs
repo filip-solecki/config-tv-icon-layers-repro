@@ -73,6 +73,16 @@ export const allDistinct = (rows) =>
 export const allIdentical = (rows) =>
     rows.length > 0 && rows.every((row) => isComplete(row) && row.unique === 1);
 
+/**
+ * Check 0: the outcome has to match the plugin that is actually installed. The PR branch carries
+ * the same version number as the published release, so a stale `build/` or a prepare script that
+ * fell back to `--ignore-scripts` can put the release under test while the run claims to be
+ * testing the branch. Without this, that reads as "the branch does not work".
+ */
+export const layerSupportMatchesOutcome = (result) =>
+    result.pluginHasLayerSupport ===
+    allDistinct(layerRenditions(result, "layers", "digest"));
+
 /** Every diagnostic actool printed, across every mode. Empty means it compiled clean. */
 export function actoolDiagnostics(result) {
     return Object.entries(result.modes).flatMap(([mode, data]) =>

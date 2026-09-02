@@ -132,6 +132,15 @@ Every failure message prints the actual values. Checks that compare a spread als
 three layers are really present first, so a missing or truncated image stack fails instead of
 passing for free.
 
+Check 0 guards a different kind of false result. The PR branch carries the same version number as
+the published release, and the plugin is loaded from `build/`, which is gitignored output
+reflecting whichever branch was compiled last. So neither the spec on the command line nor the
+version in `package.json` tells you which code ran. The check reads the installed
+`build/withTVAppleIconImages.js`, records whether it knows about per-layer keys, and fails when
+that does not match what the compiled catalog shows. A stale build or an install that fell back
+to `--ignore-scripts` then reports itself instead of looking like a broken branch. Packing the
+branch with `npm pack` and passing the tarball avoids the problem entirely.
+
 ### Why check 3 only compares digests for the small icon
 
 Measured, not assumed. `actool` composites `App Icon - Large` under the `marketing` idiom, where
@@ -177,6 +186,7 @@ layer so this is visible in the data rather than taken on trust.
   actool diagnostics: none
   partial plist keys: CFBundleIcons CFBundleIcons.CFBundlePrimaryIcon TVTopShelfImage TVTopShelfImage.TVTopShelfPrimaryImage TVTopShelfImage.TVTopShelfPrimaryImageWide
 
+  [ OK]  0  the installed plugin matches the outcome  build has no layer support and the layers are repeated
   [BUG]  1  each layer gets its own artwork           the layer keys had no effect
   [BUG]  2  the compiled catalog keeps them distinct  one rendition repeated per stack
   [ OK]  3  a flat config still behaves like 0.1.6    one image in all three layers
@@ -217,6 +227,7 @@ The two configs produce the same catalog, which is the bug: the layer keys did n
   actool diagnostics: none
   partial plist keys: CFBundleIcons CFBundleIcons.CFBundlePrimaryIcon TVTopShelfImage TVTopShelfImage.TVTopShelfPrimaryImage TVTopShelfImage.TVTopShelfPrimaryImageWide
 
+  [ OK]  0  the installed plugin matches the outcome  build has layer support and the layers differ
   [ OK]  1  each layer gets its own artwork           Front, Middle and Back all differ
   [ OK]  2  the compiled catalog keeps them distinct  3 renditions per stack, actool clean
   [ OK]  3  a flat config still behaves like 0.1.6    one image in all three layers
@@ -234,6 +245,7 @@ The flat digests are the same values in both runs, `6EEC5808`, `0CB9A3E5`, `6B8E
 config-tv under test: file:../config-tv/packages/config-tv (version 0.1.6)
 
 ▶ Apple TV app icon layers
+  ✔ 0. the installed plugin matches the outcome
   ✔ 1. each layer of each app icon gets its own artwork
   ✔ 2. the compiled catalog keeps the layers distinct
   ✔ 3. a config that uses only the flat keys behaves exactly as 0.1.6 did

@@ -7,6 +7,7 @@ import {
     IDENTICAL_DIGEST_ICONS,
     layerArtwork,
     layerRenditions,
+    layerSupportMatchesOutcome,
     loadResult,
     missingPlistKeys,
 } from "./checks.mjs";
@@ -39,6 +40,10 @@ const diagnostics = actoolDiagnostics(result);
 console.log();
 console.log(`  actool diagnostics: ${diagnostics.length === 0 ? "none" : diagnostics.join("; ")}`);
 console.log(`  partial plist keys: ${result.modes.layers.plistKeys.sort().join(" ")}`);
+console.log(
+    `  installed plugin:   ${result.configTvVersion} from ${result.configTvSpec}, ` +
+        `layer support ${result.pluginHasLayerSupport ? "present" : "absent"}`
+);
 console.log();
 
 let failures = 0;
@@ -48,6 +53,15 @@ const report = (ok, number, title, detail) => {
         failures++;
     }
 };
+
+const compiledLayers = layerRenditions(result, "layers", "digest");
+report(
+    layerSupportMatchesOutcome(result),
+    0,
+    "the installed plugin matches the outcome",
+    `build ${result.pluginHasLayerSupport ? "has" : "has no"} layer support and the layers ` +
+        `${allDistinct(compiledLayers) ? "differ" : "are repeated"}`
+);
 
 const artwork = layerArtwork(result, "layers");
 report(

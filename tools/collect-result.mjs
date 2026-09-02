@@ -94,11 +94,25 @@ function plistKeys(plist) {
 }
 
 const [spec, ...modes] = process.argv.slice(2);
+const require = createRequire(import.meta.url);
+
+/**
+ * Whether the installed plugin knows about per-layer artwork at all. The PR branch carries the
+ * same version number as the published release, and `build/` is gitignored output that reflects
+ * whichever branch was compiled last, so neither the spec nor the version tells you which code
+ * is installed. Reading the built file does.
+ */
+function pluginHasLayerSupport() {
+    const built = require.resolve(
+        "@react-native-tvos/config-tv/build/withTVAppleIconImages.js"
+    );
+    return readFileSync(built, "utf8").includes("iconSmallLayers");
+}
 
 const result = {
     configTvSpec: spec,
-    configTvVersion: createRequire(import.meta.url)("@react-native-tvos/config-tv/package.json")
-        .version,
+    configTvVersion: require("@react-native-tvos/config-tv/package.json").version,
+    pluginHasLayerSupport: pluginHasLayerSupport(),
     modes: {},
 };
 
