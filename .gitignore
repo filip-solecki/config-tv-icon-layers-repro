@@ -1,0 +1,8 @@
+node_modules/
+.expo/
+out/
+*.log
+
+# There is no committed native directory on purpose: ./repro.sh runs `expo prebuild` every
+# time, so the catalog under test is always the one the plugin just generated.
+ios/

@@ -1,0 +1,21 @@
+{
+    "name": "config-tv-icon-layers-repro",
+    "version": "1.0.0",
+    "private": true,
+    "description": "Proves @react-native-tvos/config-tv can give each Apple TV app icon layer its own artwork",
+    "main": "index.js",
+    "scripts": {
+        "art": "node tools/make-art.mjs",
+        "test": "node --test tests/*.test.mjs",
+        "show": "node tools/show.mjs"
+    },
+    "dependencies": {
+        "@react-native-tvos/config-tv": "0.1.6",
+        "expo": "56.0.20",
+        "react": "19.2.4",
+        "react-native": "npm:react-native-tvos@0.85.3-3"
+    },
+    "devDependencies": {
+        "sharp": "0.34.4"
+    }
+}
